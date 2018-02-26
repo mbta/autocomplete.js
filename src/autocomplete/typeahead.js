@@ -513,21 +513,23 @@ function buildDom(options) {
   if (options.templates && options.templates.dropdownMenu) {
     $dropdown.html(_.templatify(options.templates.dropdownMenu)());
   }
-  $hint = $input.clone().css(options.css.hint).css(getBackgroundStyles($input));
+  if (options.hint) {
+    $hint = $input.clone().css(options.css.hint).css(getBackgroundStyles($input));
 
-  $hint
-    .val('')
-    .addClass(_.className(options.cssClasses.prefix, options.cssClasses.hint, true))
-    .removeAttr('id name placeholder required')
-    .prop('readonly', true)
-    .attr({
-      'aria-hidden': 'true',
-      autocomplete: 'off',
-      spellcheck: 'false',
-      tabindex: -1
-    });
-  if ($hint.removeData) {
-    $hint.removeData();
+    $hint
+      .val('')
+      .addClass(_.className(options.cssClasses.prefix, options.cssClasses.hint, true))
+      .removeAttr('id name placeholder required')
+      .prop('readonly', true)
+      .attr({
+        'aria-hidden': 'true',
+        autocomplete: 'off',
+        spellcheck: 'false',
+        tabindex: -1
+      });
+    if ($hint.removeData) {
+      $hint.removeData();
+    }
   }
 
   // store the original values of the attrs that get modified
