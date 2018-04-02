@@ -33,6 +33,8 @@ function Dataset(o) {
   this.name = typeof o.name === 'undefined' || o.name === null ? _.getUniqueId() : o.name;
 
   this.source = o.source;
+  this.minLength = _.isNumber(o.minLength) ? o.minLength : 1;
+  this.maxLength = _.isNumber(o.maxLength) ? o.maxLength : Number.MAX_SAFE_INTEGER;
   this.displayFn = getDisplayFn(o.display || o.displayKey);
 
   this.templates = getTemplates(o.templates, this.displayFn);
