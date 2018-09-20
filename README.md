@@ -46,10 +46,7 @@ This JavaScript library adds a fast and fully-featured auto-completion menu to y
 - [API](#api)
   - [jQuery](#jquery-1)
   - [Standalone](#standalone-1)
-- [Development](#development)
-- [Tests](#tests)
-  - [Testing accessibility](#testing-accessibility)
-- [Release](#release)
+- [Contributing & releasing](#contributing--releasing)
 - [Credits](#credits)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -290,6 +287,8 @@ When initializing an autocomplete, there are a number of options you can configu
 
 * `debug` – If `true`, the autocomplete will not close on `blur`. Defaults to `false`.
 
+* `clearOnSelected` – If `true`, the autocomplete will empty the search box when a suggestion is selected. This is useful if you want to use this as a way to input tags using the `selected` event.
+
 * `openOnFocus` – If `true`, the dropdown menu will open when the input is focused. Defaults to `false`.
 
 * `appendTo` – If set with a DOM selector, doesn't wrap the input and appends the wrapper and dropdown menu to the first DOM element matching the selector. It automatically positions the wrapper under the input, and sets it to the same width as the input. Can't be used with `hint: true`, because `hint` requires the wrapper around the input.
@@ -479,6 +478,9 @@ Datasets can be configured using the following options.
   is called with the `suggestion`, and any optional arguments that may have
   been forwarded by the source: `function suggestionTemplate(suggestion, [forwarded args])`.
   Defaults to the value of `displayKey` wrapped in a `p` tag i.e. `<p>{{value}}</p>`.
+
+* `debounce` – If set, will postpone the source execution until after `debounce` milliseconds
+have elapsed since the last time it was invoked.
 
 
 ## Sources
@@ -705,7 +707,7 @@ The standalone version API is similiar to jQuery's:
 
 ```js
 var search = autocomplete('#search', { hint: false }, [{
-  source: autocomplete.sources.hits(index, { hitsPerPage: 5 }
+  source: autocomplete.sources.hits(index, { hitsPerPage: 5 })
 }]);
 
 search.autocomplete.open();
@@ -731,75 +733,9 @@ to its previous value. Can be used to avoid naming collisions.
 var algoliaAutocomplete = autocomplete.noConflict();
 ```
 
-## Development
+## Contributing & releasing
 
-To start developing, you can use the following commands:
-
-```sh
-yarn
-yarn dev
-open http://localhost:8888/test/playground.html
-```
-
-Linting is done with [eslint](http://eslint.org/) and [Algolia's configuration](https://github.com/algolia/eslint-config-algolia) and can be run with:
-
-```sh
-yarn lint
-```
-
-## Tests
-
-Unit tests are written using [Jasmine](http://jasmine.github.io/) and ran with [Karma](http://karma-runner.github.io/). Integration tests are using [Mocha](http://mochajs.org/) and [Saucelabs](https://saucelabs.com/).
-
-To run the unit tests suite run:
-
-```sh
-yarn test
-```
-
-To run the integration tests suite run:
-
-```sh
-yarn build
-yarn server
-ngrok 8888
-TEST_HOST=http://YOUR_NGROK_ID.ngrok.com SAUCE_ACCESS_KEY=YOUR_KEY SAUCE_USERNAME=YOUR_USERNAME./node_modules/mocha/bin/mocha --harmony -R spec ./test/integration/test.js
-```
-
-### Testing accessibility
-
-Autocomplete.js is accessible to screen readers, and here's how to test how most blind users will experience it:
-
-#### Steps
-
-1. Run `yarn dev` on your development machine
-1. Start the screen reader
-1. Open a browser to http://YOUR_IP:8888/test/playground.html
-1. Tab to the field
-1. Type a search query
-1. Use the arrow keys to navigate through the results
-
-✔ SUCCESS: results are read (not necessarily in sync with the visually selected cursor)  
-𐄂 FAIL: no text is read or the screen reader keeps reading the typed query
-
-#### Recommended testing platforms
-
-- VoiceOver (CMD+F5 in macOS): Safari, Chrome
-- [JAWS](http://www.freedomscientific.com/Products/Blindness/JAWS): IE11, Chrome (Windows 7 VM available at [modern.ie](https://modern.ie))
-- [NVDA](http://www.nvaccess.org/): IE11, Chrome (Windows 8.1 VM available at [modern.ie](https://modern.ie))
-
-#### Tips
-
-- All screen readers work slightly differently - which makes making accessible pages tricky.
-- Don't worry if the usability isn't 100% perfect, but make sure the functionality is there.
-
-## Release
-
-Decide if this is a patch, minor or major release, have a look at [semver.org](http://semver.org/).
-
-```sh
-npm run release [major|minor|patch|x.x.x]
-```
+see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## Credits
 

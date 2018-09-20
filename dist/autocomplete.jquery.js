@@ -1,7 +1,7 @@
 /*!
- * autocomplete.js 0.29.0
+ * autocomplete.js 0.31.0
  * https://github.com/algolia/autocomplete.js
- * Copyright 2017 Algolia, Inc. and other contributors; Licensed MIT
+ * Copyright 2018 Algolia, Inc. and other contributors; Licensed MIT
  */
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -120,6 +120,7 @@
 	        openOnFocus: o.openOnFocus,
 	        templates: o.templates,
 	        debug: o.debug,
+	        clearOnSelected: o.clearOnSelected,
 	        cssClasses: o.cssClasses,
 	        datasets: datasets,
 	        keyboardShortcuts: o.keyboardShortcuts,
@@ -262,10 +263,14 @@
 	  map: null,
 	  mixin: null,
 
-	  isMsie: function() {
+	  isMsie: function(agentString) {
+	    if (agentString === undefined) { agentString = navigator.userAgent; }
 	    // from https://github.com/ded/bowser/blob/master/bowser.js
-	    return (/(msie|trident)/i).test(navigator.userAgent) ?
-	      navigator.userAgent.match(/(msie |rv:)(\d+(.\d+)?)/i)[2] : false;
+	    if ((/(msie|trident)/i).test(agentString)) {
+	      var match = agentString.match(/(msie |rv:)(\d+(.\d+)?)/i);
+	      if (match) { return match[2]; }
+	    }
+	    return false;
 	  },
 
 	  // http://stackoverflow.com/a/6969486
@@ -409,6 +414,7 @@
 	  this.openOnFocus = !!o.openOnFocus;
 	  this.minLength = _.isNumber(o.minLength) ? o.minLength : 1;
 	  this.autoWidth = (o.autoWidth === undefined) ? true : !!o.autoWidth;
+	  this.clearOnSelected = !!o.clearOnSelected;
 
 	  o.hint = !!o.hint;
 
@@ -795,7 +801,11 @@
 	    if (typeof datum.value !== 'undefined') {
 	      this.input.setQuery(datum.value);
 	    }
-	    this.input.setInputValue(datum.value, true);
+	    if (this.clearOnSelected) {
+	      this.setVal('');
+	    } else {
+	      this.input.setInputValue(datum.value, true);
+	    }
 
 	    this._setLanguageDirection();
 
@@ -2356,6 +2366,8 @@
 	  this.source = o.source;
 	  this.displayFn = getDisplayFn(o.display || o.displayKey);
 
+	  this.debounce = o.debounce;
+
 	  this.templates = getTemplates(o.templates, this.displayFn);
 
 	  this.css = _.mixin({}, css, o.appendTo ? css.appendTo : {});
@@ -2525,7 +2537,25 @@
 	    if (this.shouldFetchFromCache(query)) {
 	      handleSuggestions.apply(this, [this.cachedSuggestions].concat(this.cachedRenderExtraArgs));
 	    } else {
-	      this.source(query, handleSuggestions.bind(this));
+	      var that = this;
+	      var execSource = function() {
+	        // When the call is debounced the condition avoid to do a useless
+	        // request with the last character when the input has been cleared
+	        if (!that.canceled) {
+	          that.source(query, handleSuggestions.bind(that));
+	        }
+	      };
+
+	      if (this.debounce) {
+	        var later = function() {
+	          that.debounceTimeout = null;
+	          execSource();
+	        };
+	        clearTimeout(this.debounceTimeout);
+	        this.debounceTimeout = setTimeout(later, this.debounce);
+	      } else {
+	        execSource();
+	      }
 	    }
 	  },
 
@@ -2763,7 +2793,7 @@
 /* 22 */
 /***/ function(module, exports) {
 
-	module.exports = "0.29.0";
+	module.exports = "0.31.0";
 
 
 /***/ },

@@ -22,13 +22,14 @@ fi
 semver $nextVersion -r ">$currentVersion" ||
 error_exit "Cannot bump from $currentVersion to $nextVersion"
 
-if [[ -n $(npm owner add "`npm whoami`") ]]; then
+if ! npm owner ls | grep -q "$(npm whoami)"
+then
   error_exit "Not an owner of the npm repo, ask for it"
 fi
 
 currentBranch=$(git rev-parse --abbrev-ref HEAD)
 if [[ $currentBranch != 'master' ]]; then
-  error_exit "You mut be on master branch"
+  error_exit "You must be on master branch"
 fi
 
 if [[ -n $(git status --porcelain) ]]; then

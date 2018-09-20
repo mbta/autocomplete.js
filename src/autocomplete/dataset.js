@@ -35,6 +35,8 @@ function Dataset(o) {
   this.source = o.source;
   this.displayFn = getDisplayFn(o.display || o.displayKey);
 
+  this.debounce = o.debounce;
+
   this.templates = getTemplates(o.templates, this.displayFn);
 
   this.css = _.mixin({}, css, o.appendTo ? css.appendTo : {});
@@ -204,7 +206,25 @@ _.mixin(Dataset.prototype, EventEmitter, {
     if (this.shouldFetchFromCache(query)) {
       handleSuggestions.apply(this, [this.cachedSuggestions].concat(this.cachedRenderExtraArgs));
     } else {
-      this.source(query, handleSuggestions.bind(this));
+      var that = this;
+      var execSource = function() {
+        // When the call is debounced the condition avoid to do a useless
+        // request with the last character when the input has been cleared
+        if (!that.canceled) {
+          that.source(query, handleSuggestions.bind(that));
+        }
+      };
+
+      if (this.debounce) {
+        var later = function() {
+          that.debounceTimeout = null;
+          execSource();
+        };
+        clearTimeout(this.debounceTimeout);
+        this.debounceTimeout = setTimeout(later, this.debounce);
+      } else {
+        execSource();
+      }
     }
   },
 

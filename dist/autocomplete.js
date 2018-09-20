@@ -1,7 +1,7 @@
 /*!
- * autocomplete.js 0.29.0
+ * autocomplete.js 0.31.0
  * https://github.com/algolia/autocomplete.js
- * Copyright 2017 Algolia, Inc. and other contributors; Licensed MIT
+ * Copyright 2018 Algolia, Inc. and other contributors; Licensed MIT
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -115,6 +115,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      openOnFocus: options.openOnFocus,
 	      templates: options.templates,
 	      debug: options.debug,
+	      clearOnSelected: options.clearOnSelected,
 	      cssClasses: options.cssClasses,
 	      datasets: datasets,
 	      keyboardShortcuts: options.keyboardShortcuts,
@@ -1512,10 +1513,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  map: null,
 	  mixin: null,
 
-	  isMsie: function() {
+	  isMsie: function(agentString) {
+	    if (agentString === undefined) { agentString = navigator.userAgent; }
 	    // from https://github.com/ded/bowser/blob/master/bowser.js
-	    return (/(msie|trident)/i).test(navigator.userAgent) ?
-	      navigator.userAgent.match(/(msie |rv:)(\d+(.\d+)?)/i)[2] : false;
+	    if ((/(msie|trident)/i).test(agentString)) {
+	      var match = agentString.match(/(msie |rv:)(\d+(.\d+)?)/i);
+	      if (match) { return match[2]; }
+	    }
+	    return false;
 	  },
 
 	  // http://stackoverflow.com/a/6969486
@@ -1659,6 +1664,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.openOnFocus = !!o.openOnFocus;
 	  this.minLength = _.isNumber(o.minLength) ? o.minLength : 1;
 	  this.autoWidth = (o.autoWidth === undefined) ? true : !!o.autoWidth;
+	  this.clearOnSelected = !!o.clearOnSelected;
 
 	  o.hint = !!o.hint;
 
@@ -2045,7 +2051,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (typeof datum.value !== 'undefined') {
 	      this.input.setQuery(datum.value);
 	    }
-	    this.input.setInputValue(datum.value, true);
+	    if (this.clearOnSelected) {
+	      this.setVal('');
+	    } else {
+	      this.input.setInputValue(datum.value, true);
+	    }
 
 	    this._setLanguageDirection();
 
@@ -3606,6 +3616,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.source = o.source;
 	  this.displayFn = getDisplayFn(o.display || o.displayKey);
 
+	  this.debounce = o.debounce;
+
 	  this.templates = getTemplates(o.templates, this.displayFn);
 
 	  this.css = _.mixin({}, css, o.appendTo ? css.appendTo : {});
@@ -3775,7 +3787,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (this.shouldFetchFromCache(query)) {
 	      handleSuggestions.apply(this, [this.cachedSuggestions].concat(this.cachedRenderExtraArgs));
 	    } else {
-	      this.source(query, handleSuggestions.bind(this));
+	      var that = this;
+	      var execSource = function() {
+	        // When the call is debounced the condition avoid to do a useless
+	        // request with the last character when the input has been cleared
+	        if (!that.canceled) {
+	          that.source(query, handleSuggestions.bind(that));
+	        }
+	      };
+
+	      if (this.debounce) {
+	        var later = function() {
+	          that.debounceTimeout = null;
+	          execSource();
+	        };
+	        clearTimeout(this.debounceTimeout);
+	        this.debounceTimeout = setTimeout(later, this.debounce);
+	      } else {
+	        execSource();
+	      }
 	    }
 	  },
 
@@ -4013,7 +4043,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 22 */
 /***/ function(module, exports) {
 
-	module.exports = "0.29.0";
+	module.exports = "0.31.0";
 
 
 /***/ },
