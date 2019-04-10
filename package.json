@@ -76,7 +76,7 @@
     "release": "./release.sh"
   },
   "version": "0.31.0",
-  "main": "index.js",
+  "main": "index_jquery.js",
   "dependencies": {
     "immediate": "^3.2.3"
   }
